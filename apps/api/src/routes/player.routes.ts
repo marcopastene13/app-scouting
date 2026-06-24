@@ -5,7 +5,7 @@ import {
   getPlayerById,
   updatePlayer,
   addVideo,
-  getHistory,
+  addHistory,
 } from '../controllers/player.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -18,6 +18,6 @@ router.get('/', getPlayers);
 router.get('/:id', getPlayerById);
 router.put('/:id', updatePlayer);
 router.post('/:id/videos', addVideo);
-router.get('/:id/history', getHistory);
+router.get('/:id/history', addHistory);
 
 export default router;
