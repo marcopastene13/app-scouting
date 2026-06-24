@@ -1,23 +1,9 @@
-import { Router } from 'express';
-import {
-  createPlayer,
-  getPlayers,
-  getPlayerById,
-  updatePlayer,
-  addVideo,
-  addHistory,
-} from '../controllers/player.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-
+import { Router } from "express";
+import { authenticate } from "../middleware/auth.middleware";
+import { getPlayers, getPlayerById, createPlayer, updatePlayer } from "../controllers/player.controller";
 const router = Router();
-
-router.use(authMiddleware);
-
-router.post('/', createPlayer);
-router.get('/', getPlayers);
-router.get('/:id', getPlayerById);
-router.put('/:id', updatePlayer);
-router.post('/:id/videos', addVideo);
-router.get('/:id/history', addHistory);
-
+router.get('/', authenticate, getPlayers);
+router.get('/:id', authenticate, getPlayerById);
+router.post('/', authenticate, createPlayer);
+router.put('/:id', authenticate, updatePlayer);
 export default router;

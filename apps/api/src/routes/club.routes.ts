@@ -1,13 +1,8 @@
-import { Router } from 'express';
-import { createClub, updateClub, getMyClub } from '../controllers/club.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-
+import { Router } from "express";
+import { authenticate } from "../middleware/auth.middleware";
+import { getClubById, createClub, updateClub } from "../controllers/club.controller";
 const router = Router();
-
-router.use(authMiddleware);
-
-router.post('/', createClub);
-router.put('/:id', updateClub);
-router.get('/me', getMyClub);
-
+router.get('/:id', authenticate, getClubById);
+router.post('/', authenticate, createClub);
+router.put('/:id', authenticate, updateClub);
 export default router;
