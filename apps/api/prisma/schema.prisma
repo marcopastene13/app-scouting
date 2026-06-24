@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(player)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  club      Club?
+  player    Player?
+  reports   Report[]
+}
+
+enum Role {
+  club
+  player
+  agent
+  scout
+  admin
+}
+
+model Club {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  category     Category
+  city         String?
+  region       String?
+  logoUrl      String?
+  website      String?
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  needs        Need[]
+  shortlists   Shortlist[]
+  reports      Report[]
+}
+
+enum Category {
+  primera_a
+  primera_b
+  segunda
+  tercera
+}
+
+model Player {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName    String
+  lastName     String
+  birthdate    DateTime?
+  nationality  String    @default("Chilena")
+  rut          String?
+  heightCm     Int?
+  weightKg     Int?
+  dominantFoot DominantFoot?
+  photoUrl     String?
+  bio          String?
+  isAvailable  Boolean  @default(true)
+  isPublic     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  positions    PlayerPosition[]
+  history      PlayerHistory[]
+  videos       Video[]
+  applications Application[]
+  shortlistEntries ShortlistPlayer[]
+  reports      Report[]
+}
+
+enum DominantFoot {
+  derecho
+  izquierdo
+  ambidiestro
+}
+
+model Position {
+  id      String @id @default(uuid())
+  name    String
+  code    String @unique
+  players PlayerPosition[]
+  needs   Need[]
+}
+
+model PlayerPosition {
+  playerId   String
+  positionId String
+  isPrimary  Boolean  @default(false)
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  @@id([playerId, positionId])
+}
+
+model PlayerHistory {
+  id        String   @id @default(uuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  clubName  String
+  category  String?
+  season    String?
+  matches   Int      @default(0)
+  goals     Int      @default(0)
+  assists   Int      @default(0)
+  minutes   Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Video {
+  id        String    @id @default(uuid())
+  playerId  String
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  title     String?
+  url       String
+  type      VideoType?
+  isPrimary Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
+
+enum VideoType {
+  highlights
+  partido_completo
+  clip
+  entrenamiento
+}
+
+model Need {
+  id           String   @id @default(uuid())
+  clubId       String
+  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  positionId   String?
+  position     Position? @relation(fields: [positionId], references: [id])
+  title        String
+  description  String?
+  minAge       Int?
+  maxAge       Int?
+  dominantFoot DominantFoot?
+  status       NeedStatus @default(open)
+  deadline     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  applications Application[]
+  shortlists   Shortlist[]
+}
+
+enum NeedStatus {
+  open
+  closed
+  paused
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  needId    String
+  need      Need              @relation(fields: [needId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  message   String?
+  status    ApplicationStatus @default(pending)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  @@unique([needId, playerId])
+}
+
+enum ApplicationStatus {
+  pending
+  reviewed
+  accepted
+  rejected
+}
+
+model Report {
+  id              String         @id @default(uuid())
+  playerId        String
+  player          Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  scoutUserId     String
+  scout           User           @relation(fields: [scoutUserId], references: [id])
+  clubId          String
+  club            Club           @relation(fields: [clubId], references: [id])
+  needId          String?
+  matchDate       DateTime?
+  matchOpponent   String?
+  scoreTechnical  Int?
+  scoreTactical   Int?
+  scorePhysical   Int?
+  scoreMental     Int?
+  scorePotential  Int?
+  notesTechnical  String?
+  notesTactical   String?
+  notesPhysical   String?
+  notesMental     String?
+  summary         String?
+  recommendation  Recommendation?
+  isPrivate       Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+}
+
+enum Recommendation {
+  fichar
+  seguir
+  descartar
+}
+
+model Shortlist {
+  id        String            @id @default(uuid())
+  clubId    String
+  club      Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  needId    String?
+  need      Need?             @relation(fields: [needId], references: [id])
+  name      String
+  createdAt DateTime          @default(now())
+  players   ShortlistPlayer[]
+}
+
+model ShortlistPlayer {
+  shortlistId String
+  playerId    String
+  notes       String?
+  addedAt     DateTime  @default(now())
+  shortlist   Shortlist @relation(fields: [shortlistId], references: [id], onDelete: Cascade)
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  @@id([shortlistId, playerId])
+}
